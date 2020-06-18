@@ -1,6 +1,10 @@
-import logging
+import datetime, logging
 import apache_beam as beam
 from apache_beam.io import WriteToText
+from apache_beam.pipeline import PipelineOptions
+from apache_beam.pipeline import Pipeline
+from apache_beam.options.pipeline_options import GoogleCloudOptions
+from apache_beam.options.pipeline_options import StandardOptions
 
 class FormatStateFn(beam.DoFn):
   def process(self, element):
@@ -63,48 +67,56 @@ class RemoveDuplicatesFn(beam.DoFn):
             elif lat == None and max_lat == None:
                 highest_lat_index = i
         
-        #print('highest_confirmed_index: ' + str(highest_lat_index))
+        #print('highest_confirmed_index: ' + str(highest_confirmed_index))
         
         return [loc_list[highest_lat_index]]
     
 def run():
-     PROJECT_ID = 'arcane-footing-266618' # change to your project id
 
-     # Project ID is required when using the BQ source
-     options = {
-     'project': PROJECT_ID
-     }
-     opts = beam.pipeline.PipelineOptions(flags=[], **options)
+    PROJECT_ID = 'arcane-footing-266618' # change to your project id
+    BUCKET = 'gs://covid-19-johnshopkins' # change to your bucket name
+    DIR_PATH = BUCKET + '/output/' + datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S') + '/'
 
-     # Create beam pipeline using local runner
-     p = beam.Pipeline('DirectRunner', options=opts)
+    # Create and set your PipelineOptions.
+    options = PipelineOptions(flags=None)
 
-     sql = 'SELECT * FROM covid_19_model.Location_SQL_1 limit 100'
-     bq_source = beam.io.BigQuerySource(query=sql, use_standard_sql=True)
+    # For Dataflow execution, set the project, job_name,
+    # staging location, temp_location and specify DataflowRunner.
+    google_cloud_options = options.view_as(GoogleCloudOptions)
+    google_cloud_options.project = PROJECT_ID
+    google_cloud_options.job_name = 'location'
+    google_cloud_options.staging_location = BUCKET + '/staging'
+    google_cloud_options.temp_location = BUCKET + '/temp'
+    options.view_as(StandardOptions).runner = 'DataflowRunner'
 
-     query_results = p | 'Read from BigQuery' >> beam.io.Read(bq_source)
+    p = Pipeline(options=options)
+
+    sql = 'SELECT * FROM covid_19_model.Location_SQL_1'
+    bq_source = beam.io.BigQuerySource(query=sql, use_standard_sql=True)
+
+    query_results = p | 'Read from BigQuery' >> beam.io.Read(bq_source)
         
-     # extract city from state 
-     state_pcoll = query_results | 'Format State' >> beam.ParDo(FormatStateFn())
+    # extract city from state 
+    state_pcoll = query_results | 'Format State' >> beam.ParDo(FormatStateFn())
         
-     grouped_pcoll = state_pcoll | 'Group Locations' >> beam.GroupByKey()
+    grouped_pcoll = state_pcoll | 'Group Locations' >> beam.GroupByKey()
     
-     unique_pcoll = grouped_pcoll | 'Remove Duplicates' >> beam.ParDo(RemoveDuplicatesFn())
+    unique_pcoll = grouped_pcoll | 'Remove Duplicates' >> beam.ParDo(RemoveDuplicatesFn())
 
-     dataset_id = 'covid_19_model'
-     table_id = 'Location_Beam'
-     schema_id = 'id:INTEGER,city:STRING,state:STRING,country:STRING,latitude:FLOAT64,longitude:FLOAT64,fips:INTEGER,admin2:STRING,combined_key:STRING'
+    dataset_id = 'covid_19_model'
+    table_id = 'Location_Beam_DF'
+    schema_id = 'id:INTEGER,city:STRING,state:STRING,country:STRING,latitude:FLOAT64,longitude:FLOAT64,fips:INTEGER,admin2:STRING,combined_key:STRING'
 
-     # write PCollection to BQ table
-     unique_pcoll | 'Write BQ table' >> beam.io.WriteToBigQuery(dataset=dataset_id, 
+    # write PCollection to BQ table
+    unique_pcoll | 'Write BQ table' >> beam.io.WriteToBigQuery(dataset=dataset_id, 
                                                   table=table_id, 
                                                   schema=schema_id,
                                                   project=PROJECT_ID,
                                                   create_disposition=beam.io.BigQueryDisposition.CREATE_IF_NEEDED,
                                                   write_disposition=beam.io.BigQueryDisposition.WRITE_TRUNCATE)
      
-     result = p.run()
-     result.wait_until_finish()      
+    result = p.run()
+    result.wait_until_finish()      
 
 
 if __name__ == '__main__':
