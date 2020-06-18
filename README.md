@@ -11,3 +11,15 @@ If you would like to perform your own analysis, feel free to clone this reposito
 You should be comfortable with SQL as well as Apache Beam in order to use these notebooks. After modeling the data in appropriate tables, you can then use GCP's Data Studio to create custom visualizations and reports.
 
 Happy coding!
+
+## Data Studio Visual Report
+Here are the results of the analysis, charted using GCP's Data Studio.
+
+### China Data
+![screenshot](screenshots/china_report.JPG)
+
+### Italy Data
+![screenshot](screenshots/italy_report.JPG)
+
+### US Data
+![screenshot](screenshots/us_report.JPG)
