@@ -13,7 +13,7 @@ You should be comfortable with SQL as well as Apache Beam in order to use these 
 Happy coding!
 
 ## Data Studio Visual Report
-Here are the results of the analysis, charted using GCP's Data Studio.
+Here are the results of the analysis, charted using GCP's Data Studio. You can see in late March and parts of April that there are portions of the data missing. I wanted to represent the original data as-is, but it may make sense in some scenarios to fill in that missing data with an average of the points closest to it so that readers are less likely to be confused or misinterpret the data. Data manipulation like this is entirely based on the specific situation of data representation.
 
 ### China Data
 ![screenshot](screenshots/china_report.JPG)
@@ -23,3 +23,6 @@ Here are the results of the analysis, charted using GCP's Data Studio.
 
 ### US Data
 ![screenshot](screenshots/us_report.JPG)
+
+## Setting up Beam and Dataflow within GCP
+Here are the [steps](https://github.com/cs327e-spring2020/snippets/wiki/Beam--&-Dataflow-Setup) on getting your Cloud Platform environment set up with Apache Beam and Dataflow.
