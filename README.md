@@ -5,6 +5,33 @@ This repository shows the process of ingesting COVID-19 data from the [Johns Hop
 
 This was an exercise we did in my Elements of Databases class, taught by Professor Shirley Cohen, who is a Solutions Architect at Google.
 
+## Summary of the notebooks
+<ol>
+  <li><strong>Ingest</strong> the data
+    <ol>
+      <li>Download data from Johns Hopkins repo into a custom GCP bucket</li>
+      <li>Create a BigQuery dataset and load the files into tables</li>
+      <li>Inspect the data and merge the tables</li>
+    </ol>
+  </li>
+  <li><strong>Model</strong> the data
+    <ol>
+      <li>Create a modeling dataset</li>
+      <li>Implement a location based Primary Key</li>
+      <li>Split the table into Location and Event tables</li>
+      <li>Standardize Event table using SQL</li>
+      <li>Standardize Location table using Beam</li>
+    </ol>
+  </li>
+  <li><strong>Analyze</strong> the data
+    <ol>
+      <li>Explore the modeled tables</li>
+      <li>Create views for the data we want to visualize</li>
+      <li>Access those views inside Data Studio to create some cool charts!</li>
+    </ol>
+  </li>
+ </ol>
+
 ## Using these notebooks
 If you would like to perform your own analysis, feel free to clone this repository. First, you must have access to the Google Cloud Platform console. You also need to create a bucket in GCP's Storage Browser (mine is called `covid-19-johnshopkins`, which you can change to match your custom bucket name in the Ingestion notebook.)
 
